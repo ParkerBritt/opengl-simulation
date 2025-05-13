@@ -4,6 +4,9 @@
 #include <SDL2/SDL.h>
 #include "glad/glad.h"
 #include <vector>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 // Globals
@@ -20,6 +23,13 @@ GLuint gVertexBufferObject = 0;
 
 // shader program object
 GLuint gPipelineProgram = 0;
+
+glm::mat4 gmodelMatrix = glm::mat4(1.0f);
+glm::mat4 gViewMatrix = glm::mat4(1.0f);
+
+float gTime = 0;
+
+
 
 void GetOpenGLVersionInfo(){
     std::cout << "Vendor: " << glGetString(GL_VENDOR) << "\n";
@@ -93,6 +103,29 @@ void PreDraw()
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     glUseProgram(gPipelineProgram);
+
+    // view matrix
+    // gViewMatrix = glm::rotate(gViewMatrix, 0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 gProjMatrix = glm::perspective(
+        glm::radians(45.0f),                  // FOV
+        float(gScreenWidth) / gScreenHeight, // aspect ratio
+        0.1f,                                 // near plane
+        100.0f                                // far plane
+    );
+
+    gTime += 0.01;
+    gViewMatrix = glm::lookAt(
+        glm::vec3(sin(gTime)*3,sin(gTime+0.5),cos(gTime)*3),
+        glm::vec3(0.0f,0.0f,0.0f),
+        glm::vec3(0.0f,1.0f,0.0f)
+    );
+
+    GLint viewModelLoc = glGetUniformLocation(gPipelineProgram, "uView");
+    glUniformMatrix4fv( viewModelLoc, 1, GL_FALSE, glm::value_ptr(gViewMatrix));
+
+    GLint projModelLoc = glGetUniformLocation(gPipelineProgram, "uProj");
+    glUniformMatrix4fv( projModelLoc, 1, GL_FALSE, glm::value_ptr(gProjMatrix));
+
 }
 void Draw()
 {
@@ -190,6 +223,11 @@ GLuint CreateShaderProgram(const std::string& _vertexShaderSource, const std::st
 
     glValidateProgram(programObject);
 
+
+
+
+
+
     return programObject;
 }
 
@@ -198,9 +236,11 @@ void CreateGraphicsPipeline()
     std::string vsSource =
         "#version 410 core\n"
         "in vec4 position;\n"
+        "uniform mat4 uView;\n"
+        "uniform mat4 uProj;\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = vec4(position.x, position.y, position.z, position.w);\n"
+        "   gl_Position = uProj * uView * vec4(position.x, position.y, position.z, position.w);\n"
         "}\n"
     ;
     std::string fsSource =
@@ -212,6 +252,7 @@ void CreateGraphicsPipeline()
         "}\n"
     ;
     gPipelineProgram = CreateShaderProgram(vsSource, fsSource);
+
 }
 
 
