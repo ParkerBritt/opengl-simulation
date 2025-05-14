@@ -1,5 +1,7 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
+#include <SDL_keyboard.h>
+#include <glm/fwd.hpp>
 #include <iostream>
 #include <SDL2/SDL.h>
 #include "glad/glad.h"
@@ -26,6 +28,7 @@ GLuint gPipelineProgram = 0;
 
 glm::mat4 gmodelMatrix = glm::mat4(1.0f);
 glm::mat4 gViewMatrix = glm::mat4(1.0f);
+glm::vec3 gCamPos = glm::vec3(0.0f,0.0f,3.0f);
 
 float gTime = 0;
 
@@ -89,6 +92,32 @@ void Input()
             std::cout << "Exiting\n";
             gQuit = true;
         }
+
+        const Uint8 *state = SDL_GetKeyboardState(NULL);
+        if(state[SDL_SCANCODE_SPACE])
+        {
+            gCamPos+=glm::vec3(0.0f,0.1f,0.0f); 
+        }
+        if(state[SDL_SCANCODE_C])
+        {
+            gCamPos+=glm::vec3(0.0f,-0.1f,0.0f); 
+        }
+        if(state[SDL_SCANCODE_LEFT])
+        {
+            gCamPos+=glm::vec3(-0.1f,0.0f,0.0f); 
+        }
+        if(state[SDL_SCANCODE_RIGHT])
+        {
+            gCamPos+=glm::vec3(0.1f,0.0f,0.0f); 
+        }
+        if(state[SDL_SCANCODE_UP])
+        {
+            gCamPos+=glm::vec3(0.0f,0.0f,0.1f); 
+        }
+        if(state[SDL_SCANCODE_DOWN])
+        {
+            gCamPos+=glm::vec3(0.0f,0.0f,-0.1f); 
+        }
     }
 
 }
@@ -115,7 +144,7 @@ void PreDraw()
 
     gTime += 0.01;
     gViewMatrix = glm::lookAt(
-        glm::vec3(sin(gTime)*3,sin(gTime+0.5),cos(gTime)*3),
+        gCamPos,
         glm::vec3(0.0f,0.0f,0.0f),
         glm::vec3(0.0f,1.0f,0.0f)
     );
