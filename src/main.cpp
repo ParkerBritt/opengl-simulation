@@ -149,11 +149,37 @@ void PreDraw()
         glm::vec3(0.0f,1.0f,0.0f)
     );
 
-    GLint viewModelLoc = glGetUniformLocation(gPipelineProgram, "uView");
-    glUniformMatrix4fv( viewModelLoc, 1, GL_FALSE, glm::value_ptr(gViewMatrix));
+    GLint viewMatrixLoc = glGetUniformLocation(gPipelineProgram, "uView");
+    glUniformMatrix4fv( viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(gViewMatrix));
 
-    GLint projModelLoc = glGetUniformLocation(gPipelineProgram, "uProj");
-    glUniformMatrix4fv( projModelLoc, 1, GL_FALSE, glm::value_ptr(gProjMatrix));
+    GLint projMatrixLoc = glGetUniformLocation(gPipelineProgram, "uProj");
+    glUniformMatrix4fv( projMatrixLoc, 1, GL_FALSE, glm::value_ptr(gProjMatrix));
+
+    glm::vec3 translations[100];
+    int index = 0;
+    float offset = 0.1f;
+    for(int y = -10; y < 10; y += 2)
+    {
+        for(int x = -10; x < 10; x += 2)
+        {
+            glm::vec3 translation;
+            translation.x = (float)x / 10.0f + offset;
+            translation.y = (float)y / 10.0f + offset;
+            translation.z = 0;
+            translations[index++] = translation;
+        }
+    }  
+
+    for(size_t i=0; i< 100; ++i)
+    {
+        GLint offsetLoc = glGetUniformLocation(gPipelineProgram, std::string("offsets["+std::to_string(i)+"]").c_str());
+        if(offsetLoc==-1)
+        {
+            continue;
+        }
+        glUniform3f( offsetLoc, translations[i].x, translations[i].y, translations[i].z);
+    }
+
 
 }
 void Draw()
@@ -161,7 +187,7 @@ void Draw()
     glBindVertexArray(gVertexArrayObject); 
     glBindBuffer(GL_ARRAY_BUFFER, gVertexArrayObject);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 100);
 }
 
 void MainLoop()
@@ -267,9 +293,11 @@ void CreateGraphicsPipeline()
         "in vec4 position;\n"
         "uniform mat4 uView;\n"
         "uniform mat4 uProj;\n"
+        "uniform vec3 offsets[100];\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = uProj * uView * vec4(position.x, position.y, position.z, position.w);\n"
+        "   vec3 offset = offsets[gl_InstanceID];\n"
+        "   gl_Position = uProj * uView * vec4(position.xyz+offset, position.w);\n"
         "}\n"
     ;
     std::string fsSource =
