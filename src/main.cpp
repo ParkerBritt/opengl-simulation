@@ -18,10 +18,12 @@ SDL_Window* gWindow = nullptr;
 SDL_GLContext gOpenGLContext = nullptr;
 bool gQuit = false;
 
-// VAO
+// VAO - vertex array objects
 GLuint gVertexArrayObject = 0;
-// VBO
+// VBO - vertex buffer object
 GLuint gVertexBufferObject = 0;
+// IBO - index buffer objectg
+GLuint gIndexBufferObject = 0;
 
 // shader program object
 GLuint gPipelineProgram = 0;
@@ -29,6 +31,12 @@ GLuint gPipelineProgram = 0;
 glm::mat4 gmodelMatrix = glm::mat4(1.0f);
 glm::mat4 gViewMatrix = glm::mat4(1.0f);
 glm::vec3 gCamPos = glm::vec3(0.0f,0.0f,3.0f);
+
+int gtotalIndices = 0;
+
+std::vector<GLuint> gIndexBufferData;
+
+int gInstanceCnt = 1;
 
 float gTime = 0;
 
@@ -155,22 +163,17 @@ void PreDraw()
     GLint projMatrixLoc = glGetUniformLocation(gPipelineProgram, "uProj");
     glUniformMatrix4fv( projMatrixLoc, 1, GL_FALSE, glm::value_ptr(gProjMatrix));
 
-    glm::vec3 translations[100];
+    glm::vec3 translations[gInstanceCnt];
     int index = 0;
     float offset = 0.1f;
-    for(int y = -10; y < 10; y += 2)
+    for(size_t i; i<gInstanceCnt; ++i)
     {
-        for(int x = -10; x < 10; x += 2)
-        {
-            glm::vec3 translation;
-            translation.x = (float)x / 10.0f + offset;
-            translation.y = (float)y / 10.0f + offset;
-            translation.z = 0;
-            translations[index++] = translation;
-        }
-    }  
+        glm::vec3 translation;
+        translation.x = i;
+        translations[i] = translation;
+    }
 
-    for(size_t i=0; i< 100; ++i)
+    for(size_t i=0; i< gInstanceCnt; ++i)
     {
         GLint offsetLoc = glGetUniformLocation(gPipelineProgram, std::string("offsets["+std::to_string(i)+"]").c_str());
         if(offsetLoc==-1)
@@ -187,7 +190,20 @@ void Draw()
     glBindVertexArray(gVertexArrayObject); 
     glBindBuffer(GL_ARRAY_BUFFER, gVertexArrayObject);
 
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 100);
+    
+    GLenum renderMode;
+    renderMode = GL_TRIANGLES;
+    // renderMode = GL_LINE_LOOP;
+    // renderMode = GL_POINTS;
+
+    glDrawElementsInstanced(
+        renderMode,
+        gIndexBufferData.size(),
+        GL_UNSIGNED_INT,
+        0,
+        gInstanceCnt
+    );
+    // glDrawArrays(GL_POINTS, 0, 10*10);
 }
 
 void MainLoop()
@@ -203,15 +219,80 @@ void MainLoop()
     }
 }
 
+template <typename T>
+T fit(T value, T inMin, T inMax, T outMin, T outMax) {
+    return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+}
+
+
 void VertexSpecification()
 {
     // for cpu
-    const std::vector<GLfloat> vertexPostion{
-        // x    y    z
-        -0.8f, -0.8f, 0.0f,
-        0.8f, -0.8f, 0.0f,
-        0.0f, 0.8f, 0.0f
-    };
+    // std::vector<GLfloat> vertexPostion{
+    //     // x    y    z
+    //     -0.1f, -0.1, 0.0f, // bottom left
+    //     0.1f, -0.1, 0.0f,  // bottom right 
+    //     -0.1f, 0.1f, 0.0f, // top left
+    //     0.1f, 0.1f, 0.0f, // top right
+    // };
+    // gIndexBufferData = 
+    // {
+    //     0,5,13,
+    //     2,1,3
+    // };
+
+    std::vector<GLfloat> vertexPostion;
+    int vertDivisions = 5;
+    int horiDivisions = 5;
+    int sphereTotalPts = vertDivisions*horiDivisions;
+    float PI = 3.14159265358979323846;
+    float radius = 0.5;
+
+    // generate points
+    for(int i =0; i<=vertDivisions; i++)
+    {
+        float lon = fit<float>(i, 0, vertDivisions, 0, PI);  
+        for(int j = 0; j<horiDivisions; ++j)
+        {
+            float lat = fit<float>(j, 0, horiDivisions, 0, PI*2);
+            float x = radius * sin(lon) * cos (lat);
+            float y = radius * sin(lon) * sin (lat);
+            float z = radius * cos(lon);
+
+            vertexPostion.push_back(x);
+            vertexPostion.push_back(y);
+            vertexPostion.push_back(z);
+
+            std::cout << "plotting at: " <<  x << " " << y << " " << z << "\n";
+        }
+    }
+
+    // connect mesh
+    for (int i = 0; i < vertDivisions; ++i) {
+        for (int j = 0; j < horiDivisions; ++j) {
+            int current = i * horiDivisions + j;
+
+
+            // compute indices
+            int next = current + horiDivisions;
+            int nextRight = (i+1)*horiDivisions    +    (j+1)%horiDivisions;
+            int currentRight = (i)*horiDivisions    +    (j+1)%horiDivisions;
+
+
+
+            // first triangle 
+            gIndexBufferData.push_back(current);
+            gIndexBufferData.push_back(nextRight);
+            gIndexBufferData.push_back(next);
+
+            // second triangle
+            gIndexBufferData.push_back(current);
+            gIndexBufferData.push_back(currentRight);
+            gIndexBufferData.push_back(nextRight);
+        }
+    }
+
+
 
     // for gpu
     glGenVertexArrays(1, &gVertexArrayObject);
@@ -225,6 +306,15 @@ void VertexSpecification()
         vertexPostion.data(),
         GL_STATIC_DRAW
     );
+
+    glGenBuffers(1, &gIndexBufferObject);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        gIndexBufferData.size()*sizeof(GLuint),
+        gIndexBufferData.data(),
+        GL_STATIC_DRAW
+    );
     
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
@@ -232,7 +322,7 @@ void VertexSpecification()
         3, // size
         GL_FLOAT, // type
         GL_FALSE, // normalized
-        0, // stride
+        sizeof(GLfloat)*3, // stride
         (void*)0
     );
 
@@ -293,7 +383,7 @@ void CreateGraphicsPipeline()
         "in vec4 position;\n"
         "uniform mat4 uView;\n"
         "uniform mat4 uProj;\n"
-        "uniform vec3 offsets[100];\n"
+        "uniform vec3 offsets["+std::to_string(gInstanceCnt)+"];\n"
         "void main()\n"
         "{\n"
         "   vec3 offset = offsets[gl_InstanceID];\n"
@@ -303,6 +393,7 @@ void CreateGraphicsPipeline()
     std::string fsSource =
         "#version 410 core\n"
         "out vec4 color;\n"
+        "in vec4 position;\n"
         "void main()\n"
         "{\n"
         "   color = vec4(1.0f, 0.5, 0.0f, 1.0f);\n"
@@ -314,6 +405,15 @@ void CreateGraphicsPipeline()
 
 
 void CleanUp(){
+    std::cout << "cleaning up\n";
+
+    glDeleteProgram(gPipelineProgram);
+    glDeleteBuffers(1, &gVertexBufferObject);
+    glDeleteBuffers(1, &gIndexBufferObject);
+    glDeleteVertexArrays(1, &gVertexArrayObject);
+
+    SDL_GL_DeleteContext(gOpenGLContext);
+
     SDL_DestroyWindow(gWindow);
 
     SDL_Quit();
