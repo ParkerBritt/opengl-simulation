@@ -32,7 +32,7 @@ GLuint gPipelineProgram = 0;
 glm::mat4 gmodelMatrix = glm::mat4(1.0f);
 glm::mat4 gViewMatrix = glm::mat4(1.0f);
 
-Camera gCamera = Camera(0.0f, 0.0f, 1.0f);
+Camera gCamera = Camera(0.0f, 0.0f, 5.0f);
 
 int gtotalIndices = 0;
 

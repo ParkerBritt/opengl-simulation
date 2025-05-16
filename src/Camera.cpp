@@ -24,11 +24,17 @@ void printVec(const glm::vec3& vector) {
 
 Camera::Camera()
 {
+    Camera(0.0f, 0.0f, 0.5f);
 }
 
 Camera::Camera(float posX, float posY, float posZ)
 {
     setPos(posX, posY, posZ);
+    viewMatrix_ = glm::lookAt(
+        camPos_,
+        camCenter_,
+        camUp_
+    );
 }
 
 
