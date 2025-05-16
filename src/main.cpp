@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "Camera.hpp"
 
 
 // Globals
@@ -30,7 +31,8 @@ GLuint gPipelineProgram = 0;
 
 glm::mat4 gmodelMatrix = glm::mat4(1.0f);
 glm::mat4 gViewMatrix = glm::mat4(1.0f);
-glm::vec3 gCamPos = glm::vec3(0.0f,0.0f,3.0f);
+
+Camera gCamera = Camera(0.0f, 0.0f, 1.0f);
 
 int gtotalIndices = 0;
 
@@ -90,6 +92,10 @@ void InitializeProgram(){
     GetOpenGLVersionInfo();
 }
 
+void UpdateCamera()
+{
+
+}
 
 void Input()
 {
@@ -100,32 +106,32 @@ void Input()
             std::cout << "Exiting\n";
             gQuit = true;
         }
+    }
 
-        const Uint8 *state = SDL_GetKeyboardState(NULL);
-        if(state[SDL_SCANCODE_SPACE])
-        {
-            gCamPos+=glm::vec3(0.0f,0.1f,0.0f); 
-        }
-        if(state[SDL_SCANCODE_C])
-        {
-            gCamPos+=glm::vec3(0.0f,-0.1f,0.0f); 
-        }
-        if(state[SDL_SCANCODE_LEFT])
-        {
-            gCamPos+=glm::vec3(-0.1f,0.0f,0.0f); 
-        }
-        if(state[SDL_SCANCODE_RIGHT])
-        {
-            gCamPos+=glm::vec3(0.1f,0.0f,0.0f); 
-        }
-        if(state[SDL_SCANCODE_UP])
-        {
-            gCamPos+=glm::vec3(0.0f,0.0f,0.1f); 
-        }
-        if(state[SDL_SCANCODE_DOWN])
-        {
-            gCamPos+=glm::vec3(0.0f,0.0f,-0.1f); 
-        }
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    if(state[SDL_SCANCODE_SPACE])
+    {
+        gCamera.rotateAroundCenter(-0.05f, gCamera.getRight()*glm::vec3(1.0f, 0.0f, 1.0f));
+    }
+    if(state[SDL_SCANCODE_C])
+    {
+        gCamera.rotateAroundCenter(0.05f, gCamera.getRight()*glm::vec3(1.0f, 0.0f, 1.0f));
+    }
+    if(state[SDL_SCANCODE_LEFT])
+    {
+        gCamera.rotateAroundCenter(0.05f, {0,1,0});
+    }
+    if(state[SDL_SCANCODE_RIGHT])
+    {
+        gCamera.rotateAroundCenter(-0.05f, {0,1,0});
+    }
+    if(state[SDL_SCANCODE_UP])
+    {
+        gCamera.changeRadius(-0.05f);
+    }
+    if(state[SDL_SCANCODE_DOWN])
+    {
+        gCamera.changeRadius(0.05f);
     }
 
 }
@@ -151,11 +157,7 @@ void PreDraw()
     );
 
     gTime += 0.01;
-    gViewMatrix = glm::lookAt(
-        gCamPos,
-        glm::vec3(0.0f,0.0f,0.0f),
-        glm::vec3(0.0f,1.0f,0.0f)
-    );
+    gViewMatrix = gCamera.getViewMatrix();
 
     GLint viewMatrixLoc = glGetUniformLocation(gPipelineProgram, "uView");
     glUniformMatrix4fv( viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(gViewMatrix));
@@ -166,7 +168,7 @@ void PreDraw()
     glm::vec3 translations[gInstanceCnt];
     int index = 0;
     float offset = 0.1f;
-    for(size_t i; i<gInstanceCnt; ++i)
+    for(size_t i=0; i<gInstanceCnt; ++i)
     {
         glm::vec3 translation;
         translation.x = i;
@@ -188,12 +190,12 @@ void PreDraw()
 void Draw()
 {
     glBindVertexArray(gVertexArrayObject); 
-    glBindBuffer(GL_ARRAY_BUFFER, gVertexArrayObject);
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
 
     
     GLenum renderMode;
-    renderMode = GL_TRIANGLES;
-    // renderMode = GL_LINE_LOOP;
+    // renderMode = GL_TRIANGLES;
+    renderMode = GL_LINE_LOOP;
     // renderMode = GL_POINTS;
 
     glDrawElementsInstanced(

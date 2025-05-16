@@ -7,11 +7,13 @@ project(simulation)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
+    src/Camera.cpp
     extern/glad/src/glad.c
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     include
+    src
     extern/glad/include
 )
 
