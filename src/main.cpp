@@ -1,6 +1,7 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include <SDL_keyboard.h>
+#include <SDL_mouse.h>
 #include <glm/fwd.hpp>
 #include <iostream>
 #include <SDL2/SDL.h>
@@ -25,6 +26,10 @@ GLuint gVertexArrayObject = 0;
 GLuint gVertexBufferObject = 0;
 // IBO - index buffer objectg
 GLuint gIndexBufferObject = 0;
+
+bool gRotatingWithMouse = false;
+bool gPanWithMouse = false;
+bool gZoomWithMouse = false;
 
 // shader program object
 GLuint gPipelineProgram = 0;
@@ -99,40 +104,75 @@ void UpdateCamera()
 
 void Input()
 {
-    SDL_Event e;
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-    while(SDL_PollEvent(&e) !=0){
-        if(e.type == SDL_QUIT){
-            std::cout << "Exiting\n";
-            gQuit = true;
+    SDL_Event e;
+    while(SDL_PollEvent(&e))
+    {
+        switch(e.type)
+        {
+            case SDL_QUIT:
+                std::cout << "Exiting\n";
+                gQuit = true;
+                break;
+
+            case SDL_MOUSEBUTTONDOWN:
+                if (e.button.button == SDL_BUTTON_RIGHT)
+                    gZoomWithMouse = true;
+                else if (e.button.button == SDL_BUTTON_MIDDLE)
+                    gPanWithMouse = true ;
+                else if (e.button.button == SDL_BUTTON_LEFT)
+                    gRotatingWithMouse = true;
+                break;
+
+            case SDL_MOUSEBUTTONUP:
+                if (e.button.button == SDL_BUTTON_RIGHT)
+                    gZoomWithMouse = false;
+                else if (e.button.button == SDL_BUTTON_MIDDLE)
+                    gPanWithMouse = false ;
+                else if (e.button.button == SDL_BUTTON_LEFT)
+                    gRotatingWithMouse = false;
+                break;
+            case SDL_MOUSEWHEEL:
+                gCamera.changeRadius(static_cast<float>(e.wheel.y)/-3.0f);
+                break;
+            case SDL_MOUSEMOTION:
+                if (gRotatingWithMouse)
+                {
+                    float dx = e.motion.xrel / 100.0f;
+                    float dy = e.motion.yrel / 100.0f;
+
+                    gCamera.rotateAroundCenter(dx, {0,1,0});
+                    gCamera.rotateAroundCenter(dy,
+                        gCamera.getRight() * glm::vec3(1.0f,0.0f,1.0f));
+                }
+                else if (gPanWithMouse)
+                {
+                    float dx = e.motion.xrel / -100.0f;
+                    float dy = e.motion.yrel / -100.0f;
+
+
+                    glm::vec3 up = gCamera.getUp()*dy;
+                    glm::vec3 right = gCamera.getRight()*dx;
+
+                    gCamera.changeCenter(up.x, up.y, up.z);
+                    gCamera.changeCenter(right.x, right.y, right.z);
+                }
+                else if (gZoomWithMouse)
+                {
+                    float dx = e.motion.xrel / -50.0f;
+
+                    gCamera.changeRadius(dx);
+                }
+                break;
         }
     }
 
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
-    if(state[SDL_SCANCODE_SPACE])
+    if(state[SDL_SCANCODE_F])
     {
-        gCamera.rotateAroundCenter(-0.05f, gCamera.getRight()*glm::vec3(1.0f, 0.0f, 1.0f));
+       gCamera.setCenter(0.0, 0.0, 0.0); 
     }
-    if(state[SDL_SCANCODE_C])
-    {
-        gCamera.rotateAroundCenter(0.05f, gCamera.getRight()*glm::vec3(1.0f, 0.0f, 1.0f));
-    }
-    if(state[SDL_SCANCODE_LEFT])
-    {
-        gCamera.rotateAroundCenter(0.05f, {0,1,0});
-    }
-    if(state[SDL_SCANCODE_RIGHT])
-    {
-        gCamera.rotateAroundCenter(-0.05f, {0,1,0});
-    }
-    if(state[SDL_SCANCODE_UP])
-    {
-        gCamera.changeRadius(-0.05f);
-    }
-    if(state[SDL_SCANCODE_DOWN])
-    {
-        gCamera.changeRadius(0.05f);
-    }
+
 
 }
 void PreDraw()

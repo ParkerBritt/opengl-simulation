@@ -22,6 +22,38 @@ void printVec(const glm::vec3& vector) {
     std::cout << std::endl;
 }
 
+void Camera::changeCenter(float x, float y, float z)
+{
+    camCenter_.x += x;
+    camCenter_.y += y;
+    camCenter_.z += z;
+
+    viewMatrix_ = glm::lookAt(
+        camPos_,
+        camCenter_,
+        camUp_
+    );
+}
+
+void Camera::setCenter(float x, float y, float z)
+{
+    camCenter_.x = x;
+    camCenter_.y = y;
+    camCenter_.z = z;
+
+    viewMatrix_ = glm::lookAt(
+        camPos_,
+        camCenter_,
+        camUp_
+    );
+}
+
+glm::vec3 Camera::getUp()
+{
+    return glm::normalize(glm::cross(getForward(), getRight()));
+}
+
+
 Camera::Camera()
 {
     Camera(0.0f, 0.0f, 0.5f);
