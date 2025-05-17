@@ -18,4 +18,6 @@ private:
     glm::vec3 collisionPoint(Particle p1, Particle p2);
     glm::vec3 reflectionRay(const glm::vec3& velocity, const glm::vec3& normal, float elasticity);
     float dragStrength = 0.95;
+    float overlap(Particle p1, Particle p2);
+
 };

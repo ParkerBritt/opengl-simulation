@@ -42,8 +42,6 @@ glm::mat4 gViewMatrix = glm::mat4(1.0f);
 
 Camera gCamera = Camera(0.0f, 0.0f, 5.0f);
 
-int gtotalIndices = 0;
-
 std::vector<GLuint> gIndexBufferData;
 
 int gInstanceCnt = 5;
