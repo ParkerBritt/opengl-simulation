@@ -1,5 +1,7 @@
 #include "ParticleManager.hpp"
 #include "Particle.hpp"
+#include <functional>
+#include <glm/geometric.hpp>
 #include <strings.h>
 #include <iostream>
 
@@ -19,12 +21,50 @@ void ParticleManager::step()
     for(int i=0; i<particleList_.size(); ++i)
     {
         Particle p = particleList_[i];
+        p.v.y -= 0.001f;
+
+        for(int j=0; j<particleList_.size(); ++j)
+        {
+            if(i==j) continue ;
+            Particle collisionP = particleList_[j];
+
+            if(collision(p, collisionP))
+            {
+                // point of incidence
+                glm::vec3 colPoint = collisionPoint(p, collisionP);
+                glm::vec3 collisionNormal = glm::normalize(p.pos-collisionP.pos);
+                p.v = reflectionRay(p.v, collisionNormal);
+            }
+
+        }
+
         // ground plane collision
-        if(p.y+p.rad<=0)
-            continue;
-        p.y -= 0.02f;
+        if(p.pos.y+p.rad<=0)
+            p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        p.pos += p.v;
+
         particleList_[i] = p;
     }
+}
+
+glm::vec3 ParticleManager::reflectionRay(const glm::vec3& velocity, const glm::vec3& normal)
+{
+    return velocity - (2 * glm::dot(velocity, normal)*normal);
+}
+
+
+glm::vec3 ParticleManager::collisionPoint(Particle p1, Particle p2)
+{
+    glm::vec3 vecToSurface = p1.rad*glm::normalize(p2.pos-p1.pos);
+    return p1.pos+vecToSurface;
+}
+
+
+bool ParticleManager::collision(Particle p1, Particle p2)
+{
+    float surfaceDist = glm::distance(p1.pos, p2.pos)-p1.rad-p2.rad;
+    return 0>=surfaceDist;
 }
 
 int ParticleManager::numParticles()

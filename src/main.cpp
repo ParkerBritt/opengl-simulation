@@ -3,6 +3,7 @@
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
 #include <glm/fwd.hpp>
+#include <glm/trigonometric.hpp>
 #include <iostream>
 #include <SDL2/SDL.h>
 #include "ParticleManager.hpp"
@@ -245,8 +246,8 @@ void SimulationStep()
         {
             continue;
         }
-        std::cout << " setting pos to: " << p.x << " " << p.y << " " << p.z << "\n";
-        glUniform3f( offsetLoc, p.x, p.y, p.z);
+        std::cout << " setting pos to: " << p.pos.x << " " << p.pos.y << " " << p.pos.z << "\n";
+        glUniform3f( offsetLoc, p.pos.x, p.pos.y, p.pos.z);
     }
 }
 
@@ -470,9 +471,9 @@ void InitializeParticles()
     for(int i=0; i<gInstanceCnt; i++)
     {
         Particle particle;
-        particle.x = i/2.0f;
-        particle.y = i+5;
-        particle.z = 0;
+        particle.pos.x = i/4.0f;
+        particle.pos.y = i*2+3;
+        particle.pos.z = glm::sin(i)/4;
         gParticleManager.addParticle(particle);
     }
 }
