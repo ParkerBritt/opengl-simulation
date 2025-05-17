@@ -33,14 +33,14 @@ void ParticleManager::step()
                 // point of incidence
                 glm::vec3 colPoint = collisionPoint(p, collisionP);
                 glm::vec3 collisionNormal = glm::normalize(p.pos-collisionP.pos);
-                p.v = reflectionRay(p.v, collisionNormal);
+                p.v = reflectionRay(p.v, collisionNormal, 0.8);
             }
 
         }
 
         // ground plane collision
         if(p.pos.y+p.rad<=0)
-            p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f));
+            p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f), 0.8);
 
         p.pos += p.v;
 
@@ -48,9 +48,11 @@ void ParticleManager::step()
     }
 }
 
-glm::vec3 ParticleManager::reflectionRay(const glm::vec3& velocity, const glm::vec3& normal)
+glm::vec3 ParticleManager::reflectionRay(const glm::vec3& velocity, const glm::vec3& normal, float elasticity)
 {
-    return velocity - (2 * glm::dot(velocity, normal)*normal);
+    glm::vec3 vNormal = glm::dot(velocity, normal) * normal;
+    glm::vec3 vTangent = velocity-vNormal;
+    return vTangent-elasticity*vNormal;
 }
 
 
