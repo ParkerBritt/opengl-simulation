@@ -33,15 +33,19 @@ void ParticleManager::step()
                 // point of incidence
                 glm::vec3 colPoint = collisionPoint(p, collisionP);
                 glm::vec3 collisionNormal = glm::normalize(p.pos-collisionP.pos);
-                p.v = reflectionRay(p.v, collisionNormal, 0.8);
+                p.v = reflectionRay(p.v, collisionNormal, 0.9);
             }
 
         }
 
         // ground plane collision
         if(p.pos.y+p.rad<=0)
-            p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f), 0.8);
+            p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f), 0.9);
 
+        // apply drag to velocity
+        p.v += -dragStrength * glm::length(p.v)*p.v;
+
+        // apply velocity to position
         p.pos += p.v;
 
         particleList_[i] = p;
