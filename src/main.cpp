@@ -5,12 +5,14 @@
 #include <glm/fwd.hpp>
 #include <iostream>
 #include <SDL2/SDL.h>
+#include "ParticleManager.hpp"
 #include "glad/glad.h"
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "Camera.hpp"
+#include "Particle.hpp"
 
 
 // Globals
@@ -43,9 +45,11 @@ int gtotalIndices = 0;
 
 std::vector<GLuint> gIndexBufferData;
 
-int gInstanceCnt = 1;
+int gInstanceCnt = 5;
 
 float gTime = 0;
+
+ParticleManager gParticleManager = ParticleManager();
 
 
 
@@ -139,8 +143,8 @@ void Input()
             case SDL_MOUSEMOTION:
                 if (gRotatingWithMouse)
                 {
-                    float dx = e.motion.xrel / 100.0f;
-                    float dy = e.motion.yrel / 100.0f;
+                    float dx = e.motion.xrel / -100.0f;
+                    float dy = e.motion.yrel / -100.0f;
 
                     gCamera.rotateAroundCenter(dx, {0,1,0});
                     gCamera.rotateAroundCenter(dy,
@@ -205,25 +209,6 @@ void PreDraw()
     GLint projMatrixLoc = glGetUniformLocation(gPipelineProgram, "uProj");
     glUniformMatrix4fv( projMatrixLoc, 1, GL_FALSE, glm::value_ptr(gProjMatrix));
 
-    glm::vec3 translations[gInstanceCnt];
-    int index = 0;
-    float offset = 0.1f;
-    for(size_t i=0; i<gInstanceCnt; ++i)
-    {
-        glm::vec3 translation;
-        translation.x = i;
-        translations[i] = translation;
-    }
-
-    for(size_t i=0; i< gInstanceCnt; ++i)
-    {
-        GLint offsetLoc = glGetUniformLocation(gPipelineProgram, std::string("offsets["+std::to_string(i)+"]").c_str());
-        if(offsetLoc==-1)
-        {
-            continue;
-        }
-        glUniform3f( offsetLoc, translations[i].x, translations[i].y, translations[i].z);
-    }
 
 
 }
@@ -248,11 +233,29 @@ void Draw()
     // glDrawArrays(GL_POINTS, 0, 10*10);
 }
 
+void SimulationStep()
+{
+    gParticleManager.step();
+
+    for(size_t i=0; i< gParticleManager.numParticles(); ++i)
+    {
+        Particle p = gParticleManager.getParticle(i);
+        GLint offsetLoc = glGetUniformLocation(gPipelineProgram, std::string("offsets["+std::to_string(i)+"]").c_str());
+        if(offsetLoc==-1)
+        {
+            continue;
+        }
+        std::cout << " setting pos to: " << p.x << " " << p.y << " " << p.z << "\n";
+        glUniform3f( offsetLoc, p.x, p.y, p.z);
+    }
+}
+
 void MainLoop()
 {
     while(!gQuit){
         Input();
 
+        SimulationStep();
         PreDraw();
         Draw();
 
@@ -260,6 +263,7 @@ void MainLoop()
 
     }
 }
+
 
 template <typename T>
 T fit(T value, T inMin, T inMax, T outMin, T outMax) {
@@ -284,8 +288,8 @@ void VertexSpecification()
     // };
 
     std::vector<GLfloat> vertexPostion;
-    int vertDivisions = 5;
-    int horiDivisions = 5;
+    int vertDivisions = 10;
+    int horiDivisions = 10;
     int sphereTotalPts = vertDivisions*horiDivisions;
     float PI = 3.14159265358979323846;
     float radius = 0.5;
@@ -461,8 +465,21 @@ void CleanUp(){
     SDL_Quit();
 }
 
+void InitializeParticles()
+{
+    for(int i=0; i<gInstanceCnt; i++)
+    {
+        Particle particle;
+        particle.x = i/2.0f;
+        particle.y = i+5;
+        particle.z = 0;
+        gParticleManager.addParticle(particle);
+    }
+}
+
 int main(){
     InitializeProgram();
+    InitializeParticles();
 
     VertexSpecification();
 

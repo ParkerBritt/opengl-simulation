@@ -8,6 +8,7 @@ project(simulation)
 add_executable(${PROJECT_NAME}
     src/main.cpp
     src/Camera.cpp
+    src/ParticleManager.cpp
     extern/glad/src/glad.c
 )
 
