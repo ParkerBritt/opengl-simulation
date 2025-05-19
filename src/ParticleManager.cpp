@@ -24,10 +24,6 @@ void ParticleManager::step()
         // apply velocity to position
         p.pos += p.v;
 
-        p.v.y -= 0.001f;
-
-        // apply drag to velocity
-        p.v += -dragStrength * glm::length(p.v)*p.v;
 
         for(int j=0; j<particleList_.size(); ++j)
         {
@@ -44,6 +40,10 @@ void ParticleManager::step()
             }
 
         }
+        p.v.y -= 0.001f;
+
+        // apply drag to velocity
+        p.v += -dragStrength * glm::length(p.v)*p.v;
 
         // ground plane collision
         if(p.pos.y+p.rad<=0)

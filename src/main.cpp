@@ -44,7 +44,7 @@ Camera gCamera = Camera(0.0f, 0.0f, 5.0f);
 
 std::vector<GLuint> gIndexBufferData;
 
-int gInstanceCnt = 5;
+int gInstanceCnt = 100;
 
 float gTime = 0;
 
