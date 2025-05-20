@@ -263,7 +263,7 @@ void MainLoop()
     while(!gQuit){
         prevCounter = curCounter;
         curCounter = SDL_GetPerformanceCounter();
-        deltaTime = static_cast<double>((curCounter - prevCounter)*1000 / static_cast<double>(SDL_GetPerformanceFrequency()));
+        deltaTime = static_cast<double>((curCounter - prevCounter) / static_cast<double>(SDL_GetPerformanceFrequency()));
 
         Input();
 

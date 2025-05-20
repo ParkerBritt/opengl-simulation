@@ -1,6 +1,7 @@
 #include "ParticleManager.hpp"
 #include "Particle.hpp"
 #include <functional>
+#include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <strings.h>
 #include <iostream>
@@ -16,53 +17,58 @@ void ParticleManager::addParticle(Particle particle)
     particleList_.push_back(particle);
 }
 
-void ParticleManager::step(double deltaTime)
+void ParticleManager::step(double dt)
 {
     for(int i=0; i<particleList_.size(); ++i)
     {
         Particle& p = particleList_[i];
         // apply velocity to position
-        p.pos += p.v * glm::vec3(deltaTime);
+        p.pos += p.v * glm::vec3(dt);
     }
+    std::vector<Particle> lockedParticles = particleList_;
 
     for(int i=0; i<particleList_.size(); ++i)
     {
-        Particle p = particleList_[i];
-        std::cout << "deltatime: " << deltaTime << "\n";
+        Particle& p = particleList_[i];
+        std::cout << "deltatime: " << dt << "\n";
 
 
-        for(int j=0; j<particleList_.size(); ++j)
+        for(int j=0; j<lockedParticles.size(); ++j)
         {
             if(i==j) continue ;
-            Particle collisionP = particleList_[j];
+            Particle collisionP = lockedParticles[j];
 
             if(collision(p, collisionP))
             {
                 // point of incidence
                 glm::vec3 colPoint = collisionPoint(p, collisionP);
                 glm::vec3 collisionNormal = glm::normalize(p.pos-collisionP.pos);
+
+                // uncollide
+                p.pos += collisionNormal * overlap(p, collisionP);
+
                 p.v = reflectionRay(p.v, collisionNormal, 0.7);
 
             }
 
         }
-        p.v.y -= 0.0001f;
+        float gravity = 9.8f;
+        p.v.y -= gravity*dt;
 
         // apply drag to velocity
-        p.v += -dragStrength * glm::length(p.v)*p.v;
+        p.v += -dragStrength * glm::length(p.v)*p.v * glm::vec3(dt);
 
         // ground plane collision
         if(p.pos.y+p.rad<=0)
             p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f), 0.7);
-
-
-        particleList_[i] = p;
     }
 }
 
 glm::vec3 ParticleManager::reflectionRay(const glm::vec3& velocity, const glm::vec3& normal, float elasticity)
 {
+    // normal component of velocity
     glm::vec3 vNormal = glm::dot(velocity, normal) * normal;
+    // tangent component of velocity
     glm::vec3 vTangent = velocity-vNormal;
     return vTangent-elasticity*vNormal;
 }
