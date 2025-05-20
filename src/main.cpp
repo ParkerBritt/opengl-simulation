@@ -21,8 +21,8 @@
 
 
 // Globals
-int gScreenWidth = 640;
-int gScreenHeight = 480;
+int gScreenWidth = 1920;
+int gScreenHeight = 1080;
 SDL_Window* gWindow = nullptr;
 SDL_GLContext gOpenGLContext = nullptr;
 bool gQuit = false;
@@ -48,7 +48,7 @@ glm::mat4 gViewMatrix = glm::mat4(1.0f);
 Camera gCamera = Camera(0.0f, 0.0f, 5.0f);
 
 float gParticleSize = 0.1;
-int gInstanceCnt = 500;
+int gInstanceCnt = 2000;
 
 std::vector<GLuint> gIndexBufferData;
 std::vector<glm::vec4> gInstancePosBufferData(gInstanceCnt);
