@@ -48,7 +48,7 @@ glm::mat4 gViewMatrix = glm::mat4(1.0f);
 Camera gCamera = Camera(0.0f, 0.0f, 5.0f);
 
 float gParticleSize = 0.1;
-int gInstanceCnt = 2000;
+int gInstanceCnt = 3000;
 
 std::vector<GLuint> gIndexBufferData;
 std::vector<glm::vec4> gInstancePosBufferData(gInstanceCnt);
@@ -516,16 +516,25 @@ void CleanUp(){
 
 void InitializeParticles()
 {
-    float size = 0.1f;
-    int rows = floor(sqrt(gInstanceCnt));
-    for(int i=0; i<gInstanceCnt; i++)
+    float size = 0.2f;
+    int dim = floor(cbrt(gInstanceCnt)); 
+    int count = 0;
+
+    for (int x = 0; x < dim && count < gInstanceCnt; ++x)
     {
-        Particle particle;
-        particle.pos.x = i/rows*size;
-        particle.pos.y = 3+i/3.0f;
-        particle.pos.z = (i%rows)*size;
-        particle.rad = gParticleSize;
-        gParticleManager.addParticle(particle);
+        for (int y = 0; y < dim && count < gInstanceCnt; ++y)
+        {
+            for (int z = 0; z < dim && count < gInstanceCnt; ++z)
+            {
+                Particle particle;
+                particle.pos.x = (x + sin(y)*0.1) * size ;
+                particle.pos.y = y * size*10 + 3.0f;
+                particle.pos.z = (z + cos(y)*0.1) * size;
+                particle.rad = gParticleSize;
+                gParticleManager.addParticle(particle);
+                ++count;
+            }
+        }
     }
 }
 

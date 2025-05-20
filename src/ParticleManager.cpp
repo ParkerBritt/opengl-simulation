@@ -18,8 +18,8 @@ ParticleManager::ParticleManager()
 
 void ParticleManager::initPartitions()
 {
-    boundsLower = glm::vec3(-100, 0, -100);
-    boundsUpper = glm::vec3(100, 100, 100);
+    boundsLower = glm::vec3(-50, 0, -50);
+    boundsUpper = glm::vec3(50, 100, 50);
 
 
     partitionSizeX_ = std::abs(boundsUpper.x-boundsLower.x)/static_cast<float>(numPartitionsX_);
@@ -107,6 +107,7 @@ void ParticleManager::step(double dt)
         partitions_[p.partionIndex].insert(p.id);
     }
 
+    // debug prints
     // for(size_t i=0; i<partitions_.size(); ++i)
     // {
     //     auto partition = partitions_[i];
@@ -117,7 +118,6 @@ void ParticleManager::step(double dt)
     //     }
     // }
 
-    // debug prints
 
 
     // std::vector<Particle> lockedParticles = particleList_;
@@ -131,6 +131,7 @@ void ParticleManager::step(double dt)
 
         std::unordered_set<size_t>& partition = partitions_[p.partionIndex];
 
+        // std::cout << "comparing against: " << partition.size() << "\n";
         for(auto it = partition.begin(); it!=partition.end(); ++it)
         {
             size_t otherParticleID = *it;
@@ -146,7 +147,8 @@ void ParticleManager::step(double dt)
                 // uncollide
                 p.pos += collisionNormal * overlap(p, collisionP);
 
-                p.v = reflectionRay(p.v, collisionNormal, 0.7);
+                glm::vec3 refRay = reflectionRay(p.v, collisionNormal, 0.2);
+                p.v = refRay;
 
             }
 

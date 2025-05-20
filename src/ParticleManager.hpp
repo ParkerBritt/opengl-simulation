@@ -26,9 +26,9 @@ private:
     std::vector<std::unordered_set<size_t>> partitions_;
     size_t maxId_=0;
 
-    size_t numPartitionsX_ = 5;
+    size_t numPartitionsX_ = 100;
     size_t numPartitionsY_ = 100;
-    size_t numPartitionsZ_ = 5;
+    size_t numPartitionsZ_ = 100;
 
     float partitionSizeX_;
     float partitionSizeY_;
