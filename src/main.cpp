@@ -33,6 +33,7 @@ GLuint gVertexArrayObject = 0;
 GLuint gVertexBufferObject = 0;
 // IBO - index buffer objectg
 GLuint gIndexBufferObject = 0;
+GLuint gIndexPosShaderBufferObject;
 
 bool gRotatingWithMouse = false;
 bool gPanWithMouse = false;
@@ -47,10 +48,11 @@ glm::mat4 gViewMatrix = glm::mat4(1.0f);
 Camera gCamera = Camera(0.0f, 0.0f, 5.0f);
 
 float gParticleSize = 0.1;
+int gInstanceCnt = 500;
 
 std::vector<GLuint> gIndexBufferData;
+std::vector<glm::vec4> gInstancePosBufferData(gInstanceCnt);
 
-int gInstanceCnt = 300;
 
 float gTime = 0;
 
@@ -245,14 +247,17 @@ void SimulationStep(double deltaTime)
     for(size_t i=0; i< gParticleManager.numParticles(); ++i)
     {
         Particle p = gParticleManager.getParticle(i);
-        GLint offsetLoc = glGetUniformLocation(gPipelineProgram, std::string("offsets["+std::to_string(i)+"]").c_str());
-        if(offsetLoc==-1)
-        {
-            continue;
-        }
-        // std::cout << " setting pos to: " << p.pos.x << " " << p.pos.y << " " << p.pos.z << "\n";
-        glUniform3f( offsetLoc, p.pos.x, p.pos.y, p.pos.z);
+        gInstancePosBufferData[i] = glm::vec4(p.pos, 0.0f);  
     }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gIndexPosShaderBufferObject);
+    glBufferSubData(
+        GL_SHADER_STORAGE_BUFFER,
+        0,
+        gInstancePosBufferData.size() * sizeof(glm::vec4),
+        gInstancePosBufferData.data()
+    );
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void MainLoop()
@@ -402,8 +407,20 @@ void VertexSpecification()
         (void*)offsetof(Vertex, normal)
     );
 
-    glBindVertexArray(0);
-    glDisableVertexAttribArray(0);
+    for(size_t i=0; i<gInstancePosBufferData.size();++i)
+    {
+        gInstancePosBufferData[i] = glm::vec4(0.0f, i, 0.0f, 0.0f);
+    }
+    glGenBuffers(1, &gIndexPosShaderBufferObject);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gIndexPosShaderBufferObject);
+    glBufferData(
+        GL_SHADER_STORAGE_BUFFER,
+        gInstancePosBufferData.size()*sizeof(glm::vec4),
+        gInstancePosBufferData.data(),
+        GL_STREAM_DRAW
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, gIndexPosShaderBufferObject);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 GLuint CompileShader(GLuint type, const std::string& _shaderSource){
