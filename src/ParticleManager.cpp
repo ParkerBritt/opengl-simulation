@@ -29,8 +29,9 @@ void ParticleManager::step(double dt)
 
     for(int i=0; i<particleList_.size(); ++i)
     {
+        float dragStrength = dragStrengthGlobal_;
         Particle& p = particleList_[i];
-        std::cout << "deltatime: " << dt << "\n";
+        // std::cout << "deltatime: " << dt << "\n";
 
 
         for(int j=0; j<lockedParticles.size(); ++j)
@@ -52,15 +53,21 @@ void ParticleManager::step(double dt)
             }
 
         }
+
+        // ground plane collision
+        if(p.pos.y-p.rad<=0)
+        {
+            p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f), 0.7);
+            p.pos.y -= p.pos.y-p.rad;
+            dragStrength+=0.9;
+        }
+
         float gravity = 9.8f;
         p.v.y -= gravity*dt;
 
         // apply drag to velocity
         p.v += -dragStrength * glm::length(p.v)*p.v * glm::vec3(dt);
 
-        // ground plane collision
-        if(p.pos.y+p.rad<=0)
-            p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f), 0.7);
     }
 }
 
