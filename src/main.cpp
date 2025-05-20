@@ -17,6 +17,7 @@
 #include "Camera.hpp"
 #include "Particle.hpp"
 #include "Vertex.hpp"
+#include <fstream>
 
 
 // Globals
@@ -223,8 +224,8 @@ void Draw()
 
     
     GLenum renderMode;
-    // renderMode = GL_TRIANGLES;
-    renderMode = GL_LINE_LOOP;
+    renderMode = GL_TRIANGLES;
+    // renderMode = GL_LINE_LOOP;
     // renderMode = GL_POINTS;
 
     glDrawElementsInstanced(
@@ -451,28 +452,31 @@ GLuint CreateShaderProgram(const std::string& _vertexShaderSource, const std::st
     return programObject;
 }
 
+std::string readShaderFile(std::string filePath)
+{
+    std::string line, sourceCode;
+    std::ifstream file(filePath);
+    if(file.is_open())
+    {
+        while(getline(file, line))
+        {
+        sourceCode+=line+"\n";
+        }
+        file.close();
+    }
+    else
+        std::cout << "Cannot open file: " << filePath << "\n";
+
+    return sourceCode;
+}
+
 void CreateGraphicsPipeline()
 {
-    std::string vsSource =
-        "#version 410 core\n"
-        "in vec4 position;\n"
-        "uniform mat4 uView;\n"
-        "uniform mat4 uProj;\n"
-        "uniform vec3 offsets["+std::to_string(gInstanceCnt)+"];\n"
-        "void main()\n"
-        "{\n"
-        "   vec3 offset = offsets[gl_InstanceID];\n"
-        "   gl_Position = uProj * uView * vec4(position.xyz+offset, position.w);\n"
-        "}\n"
-    ;
-    std::string fsSource =
-        "#version 410 core\n"
-        "out vec4 color;\n"
-        "void main()\n"
-        "{\n"
-        "   color = vec4(1.0f, 0.5, 0.0f, 1.0f);\n"
-        "}\n"
-    ;
+    std::string vsSource, fsSource;
+
+    vsSource = readShaderFile("src/shaders/sphereVS.glsl");
+    fsSource = readShaderFile("src/shaders/sphereFS.glsl");
+
     gPipelineProgram = CreateShaderProgram(vsSource, fsSource);
 
 }
