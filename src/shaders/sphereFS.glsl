@@ -17,7 +17,8 @@ vec3 remap(vec3 value, vec3 inMin, vec3 inMax, vec3 outMin, vec3 outMax)
 void main()
 {
     // color = vWorldPos;
-    float brightness = remap(dot(vNormal, vec3(1.0,0.0,0.0)), -1, 1, 0.5, 1);
+    vec3 lightDir = normalize(vec3(1.0,1.0,1.0));
+    float brightness = remap(dot(vNormal, lightDir), -1, 1, 0.5, 1);
     color = vec4(vec3(brightness), 1.0f);
     // color = vec4(1.0f, 0.5, 0.0f, 1.0f);
 }
