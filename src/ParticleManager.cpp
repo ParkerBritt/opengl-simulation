@@ -16,13 +16,19 @@ void ParticleManager::addParticle(Particle particle)
     particleList_.push_back(particle);
 }
 
-void ParticleManager::step()
+void ParticleManager::step(double deltaTime)
 {
     for(int i=0; i<particleList_.size(); ++i)
     {
-        Particle p = particleList_[i];
+        Particle& p = particleList_[i];
         // apply velocity to position
-        p.pos += p.v;
+        p.pos += p.v * glm::vec3(deltaTime);
+    }
+
+    for(int i=0; i<particleList_.size(); ++i)
+    {
+        Particle p = particleList_[i];
+        std::cout << "deltatime: " << deltaTime << "\n";
 
 
         for(int j=0; j<particleList_.size(); ++j)
@@ -35,19 +41,19 @@ void ParticleManager::step()
                 // point of incidence
                 glm::vec3 colPoint = collisionPoint(p, collisionP);
                 glm::vec3 collisionNormal = glm::normalize(p.pos-collisionP.pos);
-                p.v = reflectionRay(p.v, collisionNormal, 0.9);
+                p.v = reflectionRay(p.v, collisionNormal, 0.7);
 
             }
 
         }
-        p.v.y -= 0.001f;
+        p.v.y -= 0.0001f;
 
         // apply drag to velocity
         p.v += -dragStrength * glm::length(p.v)*p.v;
 
         // ground plane collision
         if(p.pos.y+p.rad<=0)
-            p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f), 0.9);
+            p.v = reflectionRay(p.v, glm::vec3(0.0f, 1.0f, 0.0f), 0.7);
 
 
         particleList_[i] = p;

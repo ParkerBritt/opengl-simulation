@@ -2,6 +2,8 @@
 #include <SDL2/SDL_video.h>
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
+#include <SDL_stdinc.h>
+#include <SDL_timer.h>
 #include <glm/fwd.hpp>
 #include <glm/trigonometric.hpp>
 #include <iostream>
@@ -14,6 +16,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Camera.hpp"
 #include "Particle.hpp"
+#include "Vertex.hpp"
 
 
 // Globals
@@ -42,9 +45,11 @@ glm::mat4 gViewMatrix = glm::mat4(1.0f);
 
 Camera gCamera = Camera(0.0f, 0.0f, 5.0f);
 
+float gParticleSize = 0.1;
+
 std::vector<GLuint> gIndexBufferData;
 
-int gInstanceCnt = 100;
+int gInstanceCnt = 300;
 
 float gTime = 0;
 
@@ -232,9 +237,9 @@ void Draw()
     // glDrawArrays(GL_POINTS, 0, 10*10);
 }
 
-void SimulationStep()
+void SimulationStep(double deltaTime)
 {
-    gParticleManager.step();
+    gParticleManager.step(deltaTime);
 
     for(size_t i=0; i< gParticleManager.numParticles(); ++i)
     {
@@ -244,17 +249,25 @@ void SimulationStep()
         {
             continue;
         }
-        std::cout << " setting pos to: " << p.pos.x << " " << p.pos.y << " " << p.pos.z << "\n";
+        // std::cout << " setting pos to: " << p.pos.x << " " << p.pos.y << " " << p.pos.z << "\n";
         glUniform3f( offsetLoc, p.pos.x, p.pos.y, p.pos.z);
     }
 }
 
 void MainLoop()
 {
+    Uint64 curCounter = SDL_GetPerformanceCounter();
+    Uint64 prevCounter = 0;
+    double deltaTime = 0;
+
     while(!gQuit){
+        prevCounter = curCounter;
+        curCounter = SDL_GetPerformanceCounter();
+        deltaTime = static_cast<double>((curCounter - prevCounter)*1000 / static_cast<double>(SDL_GetPerformanceFrequency()));
+
         Input();
 
-        SimulationStep();
+        SimulationStep(deltaTime);
         PreDraw();
         Draw();
 
@@ -286,12 +299,12 @@ void VertexSpecification()
     //     2,1,3
     // };
 
-    std::vector<GLfloat> vertexPostion;
+    std::vector<Vertex> vertices;
     int vertDivisions = 10;
     int horiDivisions = 10;
     int sphereTotalPts = vertDivisions*horiDivisions;
     float PI = 3.14159265358979323846;
-    float radius = 0.5;
+    float radius = gParticleSize;
 
     // generate points
     for(int i =0; i<=vertDivisions; i++)
@@ -304,9 +317,13 @@ void VertexSpecification()
             float y = radius * sin(lon) * sin (lat);
             float z = radius * cos(lon);
 
-            vertexPostion.push_back(x);
-            vertexPostion.push_back(y);
-            vertexPostion.push_back(z);
+            Vertex vert;
+            vert.pos.x = x;
+            vert.pos.y = y;
+            vert.pos.z = z;
+            vert.normal = glm::normalize(vert.pos);
+            vertices.push_back(vert);
+
 
             std::cout << "plotting at: " <<  x << " " << y << " " << z << "\n";
         }
@@ -347,8 +364,8 @@ void VertexSpecification()
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
     glBufferData(
         GL_ARRAY_BUFFER,
-        vertexPostion.size()*sizeof(GLfloat),
-        vertexPostion.data(),
+        vertices.size()*sizeof(Vertex),
+        vertices.data(),
         GL_STATIC_DRAW
     );
 
@@ -360,15 +377,28 @@ void VertexSpecification()
         gIndexBufferData.data(),
         GL_STATIC_DRAW
     );
+
+    GLsizei stride = sizeof(Vertex);
     
+    // position
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(
         0, // index
         3, // size
         GL_FLOAT, // type
         GL_FALSE, // normalized
-        sizeof(GLfloat)*3, // stride
-        (void*)0
+        stride, // stride
+        (void*)offsetof(Vertex, pos)
+    );
+    // normal
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(
+        1, // index
+        3, // size
+        GL_FLOAT, // type
+        GL_FALSE, // normalized
+        stride, // stride
+        (void*)offsetof(Vertex, normal)
     );
 
     glBindVertexArray(0);
@@ -438,7 +468,6 @@ void CreateGraphicsPipeline()
     std::string fsSource =
         "#version 410 core\n"
         "out vec4 color;\n"
-        "in vec4 position;\n"
         "void main()\n"
         "{\n"
         "   color = vec4(1.0f, 0.5, 0.0f, 1.0f);\n"
@@ -466,12 +495,15 @@ void CleanUp(){
 
 void InitializeParticles()
 {
+    float size = 0.1f;
+    int rows = floor(sqrt(gInstanceCnt));
     for(int i=0; i<gInstanceCnt; i++)
     {
         Particle particle;
-        particle.pos.x = i/4.0f;
-        particle.pos.y = i*2+3;
-        particle.pos.z = glm::sin(i)/4;
+        particle.pos.x = i/rows*size;
+        particle.pos.y = 3+i/3.0f;
+        particle.pos.z = (i%rows)*size;
+        particle.rad = gParticleSize;
         gParticleManager.addParticle(particle);
     }
 }

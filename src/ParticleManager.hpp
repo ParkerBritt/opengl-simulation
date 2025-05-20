@@ -8,7 +8,7 @@ class ParticleManager
 public:
     ParticleManager();
     void addParticle(Particle particle);
-    void step();
+    void step(double deltaTime);
     int numParticles();
     Particle getParticle(int index);
 
