@@ -168,6 +168,8 @@ void Input()
 
                     gCamera.changeCenter(up.x, up.y, up.z);
                     gCamera.changeCenter(right.x, right.y, right.z);
+                    gCamera.movePos(up.x, up.y, up.z);
+                    gCamera.movePos(right.x, right.y, right.z);
                 }
                 else if (gZoomWithMouse)
                 {
@@ -189,7 +191,8 @@ void Input()
 void PreDraw()
 // set opengl state
 {
-    glDisable(GL_DEPTH_TEST);
+    // glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
     glViewport(0,0,gScreenWidth, gScreenHeight);
