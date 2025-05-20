@@ -117,6 +117,9 @@ void Input()
 {
     const Uint8 *state = SDL_GetKeyboardState(NULL);
 
+    Uint8 modKey = state[SDL_SCANCODE_SPACE];
+
+
     SDL_Event e;
     while(SDL_PollEvent(&e))
     {
@@ -145,9 +148,11 @@ void Input()
                     gRotatingWithMouse = false;
                 break;
             case SDL_MOUSEWHEEL:
+                if(!modKey) break;
                 gCamera.changeRadius(static_cast<float>(e.wheel.y)/-3.0f);
                 break;
             case SDL_MOUSEMOTION:
+                if(!modKey) break;
                 if (gRotatingWithMouse)
                 {
                     float dx = e.motion.xrel / -100.0f;
