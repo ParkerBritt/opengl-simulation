@@ -203,7 +203,7 @@ int ParticleManager::numParticles()
     return particleList_.size();
 }
 
-Particle ParticleManager::getParticle(int index)
+Particle& ParticleManager::getParticle(int index)
 {
     return particleList_[index]; 
 }

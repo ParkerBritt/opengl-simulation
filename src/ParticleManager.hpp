@@ -11,7 +11,7 @@ public:
     void addParticle(Particle particle);
     void step(double deltaTime);
     int numParticles();
-    Particle getParticle(int index);
+    Particle& getParticle(int index);
 
 private:
     void initPartitions();

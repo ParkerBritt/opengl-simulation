@@ -137,6 +137,8 @@ void Input()
                     gPanWithMouse = true ;
                 else if (e.button.button == SDL_BUTTON_LEFT)
                     gRotatingWithMouse = true;
+
+
                 break;
 
             case SDL_MOUSEBUTTONUP:
@@ -152,8 +154,7 @@ void Input()
                 gCamera.changeRadius(static_cast<float>(e.wheel.y)/-3.0f);
                 break;
             case SDL_MOUSEMOTION:
-                if(!modKey) break;
-                if (gRotatingWithMouse)
+                if (modKey && gRotatingWithMouse)
                 {
                     float dx = e.motion.xrel / -100.0f;
                     float dy = e.motion.yrel / -100.0f;
@@ -162,7 +163,7 @@ void Input()
                     gCamera.rotateAroundCenter(dy,
                         gCamera.getRight() * glm::vec3(1.0f,0.0f,1.0f));
                 }
-                else if (gPanWithMouse)
+                else if (modKey && gPanWithMouse)
                 {
                     float dx = e.motion.xrel / -100.0f;
                     float dy = e.motion.yrel / -100.0f;
@@ -176,7 +177,23 @@ void Input()
                     gCamera.movePos(up.x, up.y, up.z);
                     gCamera.movePos(right.x, right.y, right.z);
                 }
-                else if (gZoomWithMouse)
+                // move particles
+                else if (gRotatingWithMouse)
+                {
+                    std::cout << "moving\n";
+                    for(size_t i=0; i< gParticleManager.numParticles(); ++i)
+                    {
+                        Particle& p = gParticleManager.getParticle(i);
+
+                        float dx = e.motion.xrel;
+                        float dy = e.motion.yrel;
+                        glm::vec3 up = gCamera.getUp()*dy;
+                        glm::vec3 right = gCamera.getRight()*dx;
+
+                        p.v += (up+right)*glm::vec3(0.3);  
+                    }
+                }
+                else if (modKey && gZoomWithMouse)
                 {
                     float dx = e.motion.xrel / -50.0f;
 
@@ -185,6 +202,18 @@ void Input()
                 break;
         }
     }
+
+    // int mouseX, mouseY;
+    // Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+    // if(mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
+    // {
+    //     std::cout << mouseX << " " << mouseY << "\n";
+    //     for(size_t i=0; i< gParticleManager.numParticles(); ++i)
+    //     {
+    //         Particle& p = gParticleManager.getParticle(i);
+    //         p.v += glm::normalize(glm::vec3(0,10,0)-p.pos);  
+    //     }
+    // }
 
     if(state[SDL_SCANCODE_F])
     {
@@ -256,7 +285,7 @@ void SimulationStep(double deltaTime)
 
     for(size_t i=0; i< gParticleManager.numParticles(); ++i)
     {
-        Particle p = gParticleManager.getParticle(i);
+        Particle& p = gParticleManager.getParticle(i);
         gInstancePosBufferData[i] = glm::vec4(p.pos, 0.0f);  
     }
 
