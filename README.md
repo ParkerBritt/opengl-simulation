@@ -1,3 +1,7 @@
 <h1 align="center">OpenGL Simulation</h1>
 
 A simulation project written with c++, opengl, and sdl
+
+
+https://github.com/user-attachments/assets/bf796ff5-e4d4-4ab6-96ce-0142b39119d1
+
