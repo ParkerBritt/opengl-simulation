@@ -225,8 +225,6 @@ void Input()
 void PreDraw()
 // set opengl state
 {
-    // glDisable(GL_DEPTH_TEST);
-    // glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
@@ -238,7 +236,6 @@ void PreDraw()
     glUseProgram(gPipelineProgram);
 
     // view matrix
-    // gViewMatrix = glm::rotate(gViewMatrix, 0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 gProjMatrix = glm::perspective(
         glm::radians(45.0f),                  // FOV
         float(gScreenWidth) / gScreenHeight, // aspect ratio
@@ -276,7 +273,6 @@ void Draw()
         0,
         gInstanceCnt
     );
-    // glDrawArrays(GL_POINTS, 0, 10*10);
 }
 
 void SimulationStep(double deltaTime)
@@ -331,18 +327,6 @@ T fit(T value, T inMin, T inMax, T outMin, T outMax) {
 void VertexSpecification()
 {
     // for cpu
-    // std::vector<GLfloat> vertexPostion{
-    //     // x    y    z
-    //     -0.1f, -0.1, 0.0f, // bottom left
-    //     0.1f, -0.1, 0.0f,  // bottom right 
-    //     -0.1f, 0.1f, 0.0f, // top left
-    //     0.1f, 0.1f, 0.0f, // top right
-    // };
-    // gIndexBufferData = 
-    // {
-    //     0,5,13,
-    //     2,1,3
-    // };
 
     std::vector<Vertex> vertices;
     int vertDivisions = 10;
