@@ -1,8 +1,8 @@
 <h1 align="center">OpenGL Simulation</h1>
 
 <div align="center">
-  <a href="https://www.opengl.org/"><img src="https://parkerbritt.com/badge?label=opengl&icon=opengl&color=5586A4"></a>
-  <a href="https://github.com/ParkerBritt?tab=repositories&q=&type=&language=c%2B%2B&sort="><img src="https://parkerbritt.com/badge?label=C%2B%2B&icon=cplusplus&color=00599C"></a>
+  <a href="https://www.opengl.org/"><img src="https://cards.parkerbritt.com/badge?label=opengl&icon=opengl&color=5586A4"></a>
+  <a href="https://github.com/ParkerBritt?tab=repositories&q=&type=&language=c%2B%2B&sort="><img src="https://cards.parkerbritt.com/badge?label=C%2B%2B&icon=cplusplus&color=00599C"></a>
 
 </div>
 
